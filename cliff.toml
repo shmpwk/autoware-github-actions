@@ -66,3 +66,8 @@ ignore_tags = "v.*-beta.*"
 date_order = false
 # sort the commits inside sections by oldest/newest order
 sort_commits = "oldest"
+link_parsers = [
+    { pattern = "#(\\d+)", href = "https://github.com/shmpwk/autotoware-github-actions/pull/$1"},
+    { pattern = "#(\\d+)", href = "https://github.com/shmpwk/CI_practice/pull/$1"},
+    { pattern = "#(\\d+)", href = "https://github.com/autowarefoundation/autotoware-github-actions/pull/$1"},
+]

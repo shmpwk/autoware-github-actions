@@ -14,6 +14,11 @@ inputs:
     description: ""
     required: false
     default: "true"
+  save-json-output:
+    description: ""
+    required: false
+    default: false
+
 outputs:
   changelog:
     description: ""
@@ -29,28 +34,41 @@ runs:
       id: generate-changelog
       shell: bash
       run: |
-        # Generate changelog
-        git cliff --output CHANGELOG.md --config ${{ inputs.git-cliff-config }} \
-          -vv --strip header ${{ inputs.git-cliff-args }}
-
-        r=$(cat CHANGELOG.md)
-        rm CHANGELOG.md
-
-        # Trim version and date
-        if [ "${{ inputs.trim-version-and-date }}" = "true" ]; then
-          r="$(printf "$r" | tail -n +3)"
+        if [ ! inputs.save-json-output ]; then
+          # Generate changelog
+          git cliff --output CHANGELOG.md --config ${{ inputs.git-cliff-config }} \
+            -vv --strip header ${{ inputs.git-cliff-args }}
+          r=$(cat CHANGELOG.md)
+          rm CHANGELOG.md
+          # Trim version and date
+          if ["${{ inputs.trim-version-and-date }}" = "true" ]; then
+            r="$(printf "$r" | tail -n +3)"
+          fi
+          # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"
+          echo "::set-output name=changelog::$r"
         fi
 
-        # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
-        r="${r//'%'/'%25'}"
-        r="${r//$'\n'/'%0A'}"
-        r="${r//$'\r'/'%0D'}"
+        if [ inputs.save-json-output ]; then
+          git cliff --config ${{ inputs.git-cliff-config }} \
+            -vv --strip header ${{ inputs.git-cliff-args }} --context --output context.json
+          r=$(cat context.json)
 
-        echo "::set-output name=changelog::$r"
+          # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"
 
+          echo "::set-output name=changelog::$r"
+        fi
+ 
     - name: Show result
       run: |
         echo "$CHANGELOG"
+        echo $input-json-output
       env:
         CHANGELOG: ${{ steps.generate-changelog.outputs.changelog }}
       shell: bash
+
