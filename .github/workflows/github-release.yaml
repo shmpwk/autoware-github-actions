@@ -2,17 +2,13 @@ name: github-release
 
 on:
   push:
-    branches:
-      - beta/v*
-    tags:
-      - v*
   workflow_dispatch:
     inputs:
       beta-branch-or-tag-name:
         description: The name of the beta branch or tag to release
         type: string
         required: true
-
+        
 jobs:
   github-release:
     runs-on: ubuntu-latest
@@ -50,7 +46,7 @@ jobs:
 
       - name: Run generate-changelog
         id: generate-changelog
-        uses: autowarefoundation/autoware-github-actions/generate-changelog@v1
+        uses: autowarefoundation/autoware-github-actions/generate-changelog@feat/generate-changelog-json
 
       - name: Select verb
         id: select-verb
