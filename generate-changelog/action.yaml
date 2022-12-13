@@ -64,11 +64,11 @@ runs:
           echo "::set-output name=changelog::$r"
         fi
  
-    #     - name: Show result
-    #       run: |
-    #         echo "$CHANGELOG"
-    #         echo $input-json-output
-    #       env:
-    #         CHANGELOG: ${{ steps.generate-changelog.outputs.changelog }}
-    #       shell: bash
+    - name: Show result
+      run: |
+        echo "$CHANGELOG"
+        echo $input-json-output
+      env:
+        CHANGELOG: ${{ steps.generate-changelog.outputs.changelog }}
+      shell: bash
 
