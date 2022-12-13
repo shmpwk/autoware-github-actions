@@ -37,7 +37,7 @@ runs:
         if [ ! inputs.save-json-output ]; then
           # Generate changelog
           git cliff --output CHANGELOG.md --config ${{ inputs.git-cliff-config }} \
-            -vv --strip header ${{ inputs.git-cliff-args }}
+            -vv --strip all ${{ inputs.git-cliff-args }}
           r=$(cat CHANGELOG.md)
           rm CHANGELOG.md
           # Trim version and date
