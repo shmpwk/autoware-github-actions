@@ -45,30 +45,34 @@ runs:
             r="$(printf "$r" | tail -n +3)"
           fi
           # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"
-          echo "::set-output name=changelog::$r"
+          delimiter="$(openssl rand -hex 8)"
+          echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo $r >> "${GITHUB_OUTPUT}"
+          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
         fi
 
         if [ inputs.save-json-output ]; then
           git cliff --config ${{ inputs.git-cliff-config }} \
-            -vv --strip header ${{ inputs.git-cliff-args }} --context --output context.json
+            -vv --strip all ${{ inputs.git-cliff-args }} --context --output context.json
           r=$(cat context.json)
 
           # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"
-
-          echo "::set-output name=changelog::$r"
+          delimiter="$(openssl rand -hex 8)"
+          echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo $r >> "${GITHUB_OUTPUT}"
+          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
         fi
+
+    - name: Generate json file
+      uses: jsdaniell/create-json@1.1.2
+      with:
+        name: context.json
+        json: ${{ steps.generate-changelog.outputs.changelog }}
  
-    - name: Show result
-      run: |
-        echo "$CHANGELOG"
-        echo $input-json-output
-      env:
-        CHANGELOG: ${{ steps.generate-changelog.outputs.changelog }}
-      shell: bash
+    #- name: Show result
+    #  run: |
+    #    echo "$CHANGELOG"
+    #  env:
+    #    CHANGELOG: ${{ steps.generate-changelog.outputs.changelog }}
+    #  shell: bash
 
