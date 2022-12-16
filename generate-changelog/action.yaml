@@ -63,11 +63,42 @@ runs:
           echo "${delimiter}" >> "${GITHUB_OUTPUT}"
         fi
 
-    - name: Generate json file
-      uses: jsdaniell/create-json@1.1.2
+    - uses: actions/checkout@v3
+      with: 
+        ref: json
+
+    - name: Crate dummy file
+      shell: bash
+      run: |
+        ls
+        if [ ! -e release_context.json ]; then
+          echo "[]" >>  release_context.json
+        fi
+
+    - name: Set up node
+      uses: actions/setup-node@v3
+      id: setup_node_id
       with:
-        name: context.json
-        json: ${{ steps.generate-changelog.outputs.changelog }}
+        node-version: 14
+
+    - name: Load json
+      shell: bash
+      run: |
+        npm install -g json-diff
+        echo '${{ steps.generate-changelog.outputs.changelog }}' | jq '.'
+        json-diff -n release_context.json <(echo '${{ steps.generate-changelog.outputs.changelog }}' | jq '.') 
+
+    - name: Commit
+      uses: EndBug/add-and-commit@v9
+      with:
+        message: 'feat: edit release json'
+        add: 'release_context.json --force'
+      
+        # - name: Generate json file
+        #   uses: jsdaniell/create-json@1.1.2
+        #   with:
+        #     name: context.json
+        #     json: ${{ steps.generate-changelog.outputs.changelog }}
  
     #- name: Show result
     #  run: |
