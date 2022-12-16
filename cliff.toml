@@ -72,4 +72,5 @@ link_parsers = [
     { pattern = "#(\\d+)", href = "https://github.com/shmpwk/autotoware-github-actions/pull/$1"},
     { pattern = "#(\\d+)", href = "https://github.com/shmpwk/CI_practice/pull/$1"},
     { pattern = "#(\\d+)", href = "https://github.com/autowarefoundation/autotoware-github-actions/pull/$1"},
+    { pattern = "#(\\d+)", href = "https://github.com/autowarefoundation/autoware.universe/pull/$1"},
 ]
