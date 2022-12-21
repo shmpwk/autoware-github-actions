@@ -59,7 +59,7 @@ runs:
           # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
           delimiter="$(openssl rand -hex 8)"
           echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
-          echo $r >> "${GITHUB_OUTPUT}"
+          echo $r | sed "s/'//" >> "${GITHUB_OUTPUT}"
           echo "${delimiter}" >> "${GITHUB_OUTPUT}"
         fi
 
@@ -85,8 +85,8 @@ runs:
       shell: bash
       run: |
         npm install -g json-diff
-        echo '${{ steps.generate-changelog.outputs.changelog }}' | jq '.'
-        json-diff -n release_context.json <(echo '${{ steps.generate-changelog.outputs.changelog }}' | jq '.') 
+        json-diff -nj release_context.json <(echo '${{ steps.generate-changelog.outputs.changelog }}') | awk '{print substr($0, 3)}'  | sed '/"+"/d' | sed '/"~"/d' | sed '/"-"/d' | sed '/^$/d' > release_context.json
+        cat release_context.json
 
     - name: Commit
       uses: EndBug/add-and-commit@v9
