@@ -29,81 +29,105 @@ runs:
   steps:
     - name: Set up git-cliff
       uses: kenji-miyake/setup-git-cliff@v1
-
-    - name: Generate changelog
-      id: generate-changelog
-      shell: bash
-      run: |
-        if [ ! inputs.save-json-output ]; then
-          # Generate changelog
-          git cliff --output CHANGELOG.md --config ${{ inputs.git-cliff-config }} \
-            -vv --strip all ${{ inputs.git-cliff-args }}
-          r=$(cat CHANGELOG.md)
-          rm CHANGELOG.md
-          # Trim version and date
-          if ["${{ inputs.trim-version-and-date }}" = "true" ]; then
-            r="$(printf "$r" | tail -n +3)"
-          fi
-          # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
-          delimiter="$(openssl rand -hex 8)"
-          echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
-          echo $r >> "${GITHUB_OUTPUT}"
-          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
-        fi
-
-        if [ inputs.save-json-output ]; then
-          git cliff --config ${{ inputs.git-cliff-config }} \
-            -vv --strip all ${{ inputs.git-cliff-args }} --context --output context.json
-          r=$(cat context.json)
-
-          # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
-          delimiter="$(openssl rand -hex 8)"
-          echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
-          echo $r | sed "s/'//" >> "${GITHUB_OUTPUT}"
-          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
-        fi
-
-    - uses: actions/checkout@v3
-      with: 
-        ref: json
-
-    - name: Crate dummy file
-      shell: bash
-      run: |
-        ls
-        if [ ! -e release_context.json ]; then
-          echo "[]" >>  release_context.json
-        fi
-
-    - name: Set up node
-      uses: actions/setup-node@v3
-      id: setup_node_id
       with:
-        node-version: 14
+        version: 0.10.0
 
-    - name: Load json
+    - name: Generate changelog MD
+      id: generate-changelog-md
       shell: bash
+      if: ${{ inputs.save-json-output == 'false' }}
       run: |
-        npm install -g json-diff
-        json-diff -nj release_context.json <(echo '${{ steps.generate-changelog.outputs.changelog }}') | awk '{print substr($0, 3)}'  | sed '/"+"/d' | sed '/"~"/d' | sed '/"-"/d' | sed '/^$/d' > release_context.json
-        cat release_context.json
+        # Generate changelog
+        git cliff --output CHANGELOG.md --config ${{ inputs.git-cliff-config }} \
+          -vv --strip all ${{ inputs.git-cliff-args }}
+        r=$(cat CHANGELOG.md)
+        # rm CHANGELOG.md
+        # Trim version and date
+        if [ "${{ inputs.trim-version-and-date }}" = "true" ]; then
+          r="$(printf "$r" | tail -n +3)"
+        fi
+        # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
+        delimiter="$(openssl rand -hex 8)"
+        echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
+        echo $r >> "${GITHUB_OUTPUT}"
+        echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
-    - name: Commit
-      uses: EndBug/add-and-commit@v9
-      with:
-        message: 'feat: edit release json'
-        add: 'release_context.json --force'
-      
-        # - name: Generate json file
-        #   uses: jsdaniell/create-json@1.1.2
-        #   with:
-        #     name: context.json
-        #     json: ${{ steps.generate-changelog.outputs.changelog }}
- 
-    #- name: Show result
-    #  run: |
-    #    echo "$CHANGELOG"
-    #  env:
-    #    CHANGELOG: ${{ steps.generate-changelog.outputs.changelog }}
-    #  shell: bash
+    - name: Generate changelog JSON
+      id: generate-changelog-json
+      shell: bash
+      if: ${{ inputs.save-json-output == 'true' }}
+      run: |
+        git cliff --config ${{ inputs.git-cliff-config }} \
+          -vv --strip all ${{ inputs.git-cliff-args }} --context --output context.json 
+        r=$(cat context.json)
 
+        # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
+        delimiter="$(openssl rand -hex 8)"
+        echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
+        echo $r | sed "s/'//" >> "${GITHUB_OUTPUT}"
+        echo "${delimiter}" >> "${GITHUB_OUTPUT}"
+
+    # - uses: actions/checkout@v3
+    #   with: 
+    #     ref: json
+
+    # - name: Crate dummy file
+    #   shell: bash
+    #   run: |
+    #     if [ ! -e release_context.json ]; then
+    #       echo "[]" >  release_context.json
+    #     fi
+
+    # - name: Set up node
+    #   uses: actions/setup-node@v3
+    #   id: setup_node_id
+    #   with:
+    #     node-version: latest
+
+    # - name: Load json
+    #   shell: bash
+    #   run: |
+    #     npm install -g json-diff
+    #     echo "------------------"
+    #     cat release_context.json
+    #     echo "------------------"
+    #     #echo "$CHANGELOG_JSON" > tmp.json
+    #     echo "[]" > tmp.json
+    #     cat tmp.json
+    #     echo "------------------"
+    #     json-diff -nj release_context.json tmp.json | awk '{print substr($0, 3)}'  | sed '/"+"/d' | sed '/"~"/d' | sed '/"-"/d' | sed '/^$/d' > release_context.json
+    #     #json-diff -nj release_context.json <(echo "$CHANGELOG_JSON") | awk '{print substr($0, 3)}'  | sed '/"+"/d' | sed '/"~"/d' | sed '/"-"/d' | sed '/^$/d' > release_context.json
+    #     cat release_context.json
+    #   env:
+    #       CHANGELOG_JSON: ${{ steps.generate-changelog-json.outputs.changelog }}
+
+    # - name: Commit
+    #   uses: EndBug/add-and-commit@v9
+    #   with:
+    #     message: 'feat: edit release json'
+    #     add: 'release_context.json --force'
+  
+    # - name: Generate json file
+    #   uses: jsdaniell/create-json@1.1.2
+    #   with:
+    #     name: context.json
+    #     json: ${{ steps.generate-changelog.outputs.changelog }}
+
+    # - name: Commit
+    #   uses: EndBug/add-and-commit@v9
+    #   with:
+    #     message: 'feat: edit release json'
+    #     add: 'context.json --force'
+       
+    - name: Show result
+      run: |
+        if [ "${{ inputs.save-json-output }}" = "true" ]; then
+          echo "$CHANGELOG_JSON"
+        fi
+        if [ "${{ inputs.save-json-output }}" = "false" ]; then
+          echo "$CHANGELOG"
+        fi
+      env:
+          CHANGELOG: ${{ steps.generate-changelog-md.outputs.changelog }}
+          CHANGELOG_JSON: ${{ steps.generate-changelog-json.outputs.changelog }}
+      shell: bash
