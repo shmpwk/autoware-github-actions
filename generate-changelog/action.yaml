@@ -59,7 +59,7 @@ runs:
       run: |
         git cliff --config ${{ inputs.git-cliff-config }} \
           -vv --strip all ${{ inputs.git-cliff-args }} --context --output context.json 
-        r=$(cat context.json)
+        r=$(cat context.json | jq .[].commits | jq .[] | jq -s . | jq 'map({id: .id, type: .group, scope: .scope, title: .message, link: .links[0].href})')
 
         # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
         delimiter="$(openssl rand -hex 8)"
