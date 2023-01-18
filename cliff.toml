@@ -18,9 +18,9 @@ body = """
     ### {{ group | upper_first }}
     {% for commit in commits %}
         {% if commit.scope %}\
-            - [{{ commit.scope }}] {{ commit.message | upper_first }}\
+            - [{{ commit.scope }}] {{ commit.message | upper_first }}
         {% else %}\
-            - {{ commit.message | upper_first }}\
+            - {{ commit.message | upper_first }} \
         {% endif %}\
     {% endfor %}
 {% endfor %}\n

@@ -28,9 +28,9 @@ runs:
   using: composite
   steps:
     - name: Set up git-cliff
-      uses: kenji-miyake/setup-git-cliff@v1
+      uses: kenji-miyake/setup-git-cliff@v1.1.0
       with:
-        version: 0.10.0
+        version: 1.1.2
 
     - name: Generate changelog MD
       id: generate-changelog-md
@@ -57,6 +57,13 @@ runs:
       shell: bash
       if: ${{ inputs.save-json-output == 'true' }}
       run: |
+        echo ${{ inputs.git-cliff-args }}
+        echo "----------------"
+        ls 
+        ls create_release_note
+        ls create_release_note/autoware.universe
+        echo "----------------"
+        pwd
         git cliff --config ${{ inputs.git-cliff-config }} \
           -vv --strip all ${{ inputs.git-cliff-args }} --context --output context.json 
         # cat context.json | jq .[].commits | jq .[] | jq -s . | jq 'map({id: .id, type: .group, scope: .scope, title: .message, link: .links[0].href})' > context.json
@@ -78,7 +85,7 @@ runs:
       shell: bash
       run: |
         pip install ijson
-        python "${GITHUB_ACTION_PATH}"/edit-json-file.py
+        python "${GITHUB_ACTION_PATH}"/edit-json-file.py --path ./context.json
     # - uses: actions/checkout@v3
     #   with: 
     #     ref: json

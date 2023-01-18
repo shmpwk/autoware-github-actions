@@ -1,40 +1,47 @@
 import json
 import ijson
-with open("context.json", "r") as obj:
+import argparse
+import re
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--path",
+    type=str,
+    default="./context.json",
+    required=False,
+    help="relative path to search for source repos",
+)
+path = parser.parse_args().path
+
+with open(path, "r") as obj:
   gen = ijson.items(obj, "item.commits.item")
   data = []
   for idx, dict_data in enumerate(gen):
     if not idx % 100:
       print("")
+    print(dict_data)
     if dict_data["message"]:
+      pattern = r"\(#[0-9]*?\) \(#[0-9]*?\)"
       title = dict_data["message"].replace('"', '')
-    if dict_data["links"]:
-      single_data = {"id": dict_data["id"], "type": dict_data["group"], "scope": dict_data["scope"], "title": title, "link": dict_data["links"][0]["href"]}
-    else:
-      single_data = {"id": dict_data["id"], "type": dict_data["group"], "scope": dict_data["scope"], "title": title, "link": dict_data["links"]}
+      if re.search(pattern, dict_data["message"]):
+        if dict_data["links"]:
+          single_data = {"id": dict_data["id"], "type": dict_data["group"], "scope": dict_data["scope"], "title": title, "link": dict_data["links"][0]["href"]}
+        else:
+          single_data = {"id": dict_data["id"], "type": dict_data["group"], "scope": dict_data["scope"], "title": title, "link": dict_data["links"]}
+      elif dict_data.get('body') is not None:
+        message_and_body = (dict_data["message"] + dict_data["body"]).replace('"', '')
+        match = re.search(r'(.+)\((#.+?)\)\s*(.+?)\((#.+?)\)', message_and_body)
+        if match:
+          title = re.sub(r'.+:\s*', '', match.group(3)) + ' (' + match.group(4) + ') (' + match.group(2) + ')'
+          single_data = {"id": dict_data["id"], "type": dict_data["group"], "scope": dict_data["scope"], "title": title, "link": dict_data["links"][1]["href"]}
+        else:
+          single_data = {"id": dict_data["id"], "type": dict_data["group"], "scope": dict_data["scope"], "title": title, "link": dict_data["links"][0]["href"]}
+      else:
+        single_data = {"id": dict_data["id"], "type": dict_data["group"], "scope": dict_data["scope"], "title": title, "link": dict_data["links"][0]["href"]}
     data.append(single_data)
-    # keys = list(single_data.keys())
-    # values = list(single_data.values())
-    # print(values)
-    # values = json.loads(json.dumps(values).replace('"',''))
-    # single_data = dict(zip(keys, values))
 
-    #json_string = '{"key1": "value1", "key2": "value2"}'
-
-    #data = json.loads(single_data)
-
-    # new_data = {}
-    # if single_data["title"
-    # for key in single_data:
-    #   print(single_data[key])
-    #   if single_data[key] is not None and not single_data[key]:
-    #     new_value = single_data[key].replace('"','')
-    #     new_data[key] = new_value
-    # json_string_without_quotes = json.dumps(new_data)
-
-    # data.append(json_string_without_quotes)
 print(data)
-path = './context.json'
+
 json_file = open(path, mode="w")
 json.dump(data, json_file, indent=2, ensure_ascii=False)
 json_file.close()
