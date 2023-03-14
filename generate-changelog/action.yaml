@@ -66,14 +66,14 @@ runs:
         echo $r | sed "s/'//" >> "${GITHUB_OUTPUT}"
         echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
-        architecture: 'x64'
+        # - name: Setup Python
+        #   uses: actions/setup-python@v4
+        #   with:
+        #     python-version: '3.8'
+        #     architecture: 'x64'
 
-    - name: Edit json file
-      shell: bash
-      run: |
-        pip install ijson
-        python "${GITHUB_ACTION_PATH}"/edit-json-file.py --path ./context.json
+        # - name: Edit json file
+        #   shell: bash
+        #   run: |
+        #     pip install ijson
+        #     python "${GITHUB_ACTION_PATH}"/edit-json-file.py --path ./context.json
