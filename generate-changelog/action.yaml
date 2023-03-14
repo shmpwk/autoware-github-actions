@@ -32,8 +32,8 @@ runs:
       with:
         version: 1.1.2
 
-    - name: Generate changelog MD
-      id: generate-changelog-md
+    - name: Generate changelog
+      id: generate-changelog
       shell: bash
       if: ${{ inputs.save-json-output == 'false' }}
       run: |
@@ -41,12 +41,13 @@ runs:
         git cliff --output CHANGELOG.md --config ${{ inputs.git-cliff-config }} \
           -vv --strip all ${{ inputs.git-cliff-args }}
         r=$(cat CHANGELOG.md)
-        # rm CHANGELOG.md
+        rm CHANGELOG.md
+
         # Trim version and date
         if [ "${{ inputs.trim-version-and-date }}" = "true" ]; then
           r="$(printf "$r" | tail -n +3)"
         fi
-        # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
+
         delimiter="$(openssl rand -hex 8)"
         echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
         echo $r >> "${GITHUB_OUTPUT}"
@@ -59,9 +60,7 @@ runs:
       run: |
         git cliff --config ${{ inputs.git-cliff-config }} \
           -vv --strip all ${{ inputs.git-cliff-args }} --context --output context.json 
-        # cat context.json | jq .[].commits | jq .[] | jq -s . | jq 'map({id: .id, type: .group, scope: .scope, title: .message, link: .links[0].href})' > context.json
 
-        # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
         delimiter="$(openssl rand -hex 8)"
         echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
         echo $r | sed "s/'//" >> "${GITHUB_OUTPUT}"
@@ -72,7 +71,8 @@ runs:
       with:
         python-version: '3.8'
         architecture: 'x64'
-    - name: Run Python
+
+    - name: Edit json file
       shell: bash
       run: |
         pip install ijson
