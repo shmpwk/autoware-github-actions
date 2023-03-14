@@ -40,8 +40,6 @@ with open(path, "r") as obj:
         single_data = {"id": dict_data["id"], "type": dict_data["group"], "scope": dict_data["scope"], "title": title, "link": dict_data["links"][0]["href"]}
     data.append(single_data)
 
-print(data)
-
 json_file = open(path, mode="w")
 json.dump(data, json_file, indent=2, ensure_ascii=False)
 json_file.close()

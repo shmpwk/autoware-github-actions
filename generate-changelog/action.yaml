@@ -57,13 +57,6 @@ runs:
       shell: bash
       if: ${{ inputs.save-json-output == 'true' }}
       run: |
-        echo ${{ inputs.git-cliff-args }}
-        echo "----------------"
-        ls 
-        ls create_release_note
-        ls create_release_note/autoware.universe
-        echo "----------------"
-        pwd
         git cliff --config ${{ inputs.git-cliff-config }} \
           -vv --strip all ${{ inputs.git-cliff-args }} --context --output context.json 
         # cat context.json | jq .[].commits | jq .[] | jq -s . | jq 'map({id: .id, type: .group, scope: .scope, title: .message, link: .links[0].href})' > context.json
@@ -79,74 +72,8 @@ runs:
       with:
         python-version: '3.8'
         architecture: 'x64'
-    # - name: Install dependencies
-    #   run: pip install -r requirements.txt
     - name: Run Python
       shell: bash
       run: |
         pip install ijson
         python "${GITHUB_ACTION_PATH}"/edit-json-file.py --path ./context.json
-    # - uses: actions/checkout@v3
-    #   with: 
-    #     ref: json
-
-    # - name: Crate dummy file
-    #   shell: bash
-    #   run: |
-    #     if [ ! -e release_context.json ]; then
-    #       echo "[]" >  release_context.json
-    #     fi
-
-    # - name: Set up node
-    #   uses: actions/setup-node@v3
-    #   id: setup_node_id
-    #   with:
-    #     node-version: latest
-
-    # - name: Load json
-    #   shell: bash
-    #   run: |
-    #     npm install -g json-diff
-    #     echo "------------------"
-    #     cat release_context.json
-    #     echo "------------------"
-    #     #echo "$CHANGELOG_JSON" > tmp.json
-    #     echo "[]" > tmp.json
-    #     cat tmp.json
-    #     echo "------------------"
-    #     json-diff -nj release_context.json tmp.json | awk '{print substr($0, 3)}'  | sed '/"+"/d' | sed '/"~"/d' | sed '/"-"/d' | sed '/^$/d' > release_context.json
-    #     #json-diff -nj release_context.json <(echo "$CHANGELOG_JSON") | awk '{print substr($0, 3)}'  | sed '/"+"/d' | sed '/"~"/d' | sed '/"-"/d' | sed '/^$/d' > release_context.json
-    #     cat release_context.json
-    #   env:
-    #       CHANGELOG_JSON: ${{ steps.generate-changelog-json.outputs.changelog }}
-
-    # - name: Commit
-    #   uses: EndBug/add-and-commit@v9
-    #   with:
-    #     message: 'feat: edit release json'
-    #     add: 'release_context.json --force'
-  
-    # - name: Generate json file
-    #   uses: jsdaniell/create-json@1.1.2
-    #   with:
-    #     name: context.json
-    #     json: ${{ steps.generate-changelog.outputs.changelog }}
-
-    # - name: Commit
-    #   uses: EndBug/add-and-commit@v9
-    #   with:
-    #     message: 'feat: edit release json'
-    #     add: 'context.json --force'
-       
-    # - name: Show result
-    #   run: |
-    #     if [ "${{ inputs.save-json-output }}" = "true" ]; then
-    #       echo "$CHANGELOG_JSON"
-    #     fi
-    #     if [ "${{ inputs.save-json-output }}" = "false" ]; then
-    #       echo "$CHANGELOG"
-    #     fi
-    #   env:
-    #       CHANGELOG: ${{ steps.generate-changelog-md.outputs.changelog }}
-    #       CHANGELOG_JSON: ${{ steps.generate-changelog-json.outputs.changelog }}
-    #   shell: bash
