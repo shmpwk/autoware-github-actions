@@ -39,7 +39,7 @@ runs:
       run: |
         # Generate changelog
         git cliff --output CHANGELOG.md --config ${{ inputs.git-cliff-config }} \
-          -vv --strip all ${{ inputs.git-cliff-args }}
+          -vv --strip header ${{ inputs.git-cliff-args }}
         r=$(cat CHANGELOG.md)
         rm CHANGELOG.md
 
@@ -53,6 +53,14 @@ runs:
         echo $r >> "${GITHUB_OUTPUT}"
         echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
+    - name: Show result
+      shell: bash
+      if: ${{ inputs.save-json-output == 'false' }}
+      run: |
+        echo "$CHANGELOG"
+      env:
+        CHANGELOG: ${{ steps.generate-changelog.outputs.changelog }}
+
     - name: Generate changelog JSON
       id: generate-changelog-json
       shell: bash
@@ -65,15 +73,3 @@ runs:
         echo "changelog<<${delimiter}" >> "${GITHUB_OUTPUT}"
         echo $r | sed "s/'//" >> "${GITHUB_OUTPUT}"
         echo "${delimiter}" >> "${GITHUB_OUTPUT}"
-
-        # - name: Setup Python
-        #   uses: actions/setup-python@v4
-        #   with:
-        #     python-version: '3.8'
-        #     architecture: 'x64'
-
-        # - name: Edit json file
-        #   shell: bash
-        #   run: |
-        #     pip install ijson
-        #     python "${GITHUB_ACTION_PATH}"/edit-json-file.py --path ./context.json
