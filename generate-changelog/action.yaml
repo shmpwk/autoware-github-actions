@@ -30,27 +30,7 @@ runs:
       shell: bash
       run: |
         # Generate changelog
-        git cliff --output CHANGELOG.md --config ${{ inputs.git-cliff-config }} \
-          -vv --strip header ${{ inputs.git-cliff-args }}
+        git cliff --config ${{ inputs.git-cliff-config }} \
+          -vv --strip header ${{ inputs.git-cliff-args }} --context --output context.json
 
-        r=$(cat CHANGELOG.md)
-        rm CHANGELOG.md
 
-        # Trim version and date
-        if [ "${{ inputs.trim-version-and-date }}" = "true" ]; then
-          r="$(printf "$r" | tail -n +3)"
-        fi
-
-        # Workaround for https://github.community/t/set-output-truncates-multiline-strings/16852
-        r="${r//'%'/'%25'}"
-        r="${r//$'\n'/'%0A'}"
-        r="${r//$'\r'/'%0D'}"
-
-        echo "::set-output name=changelog::$r"
-
-    - name: Show result
-      run: |
-        echo "$CHANGELOG"
-      env:
-        CHANGELOG: ${{ steps.generate-changelog.outputs.changelog }}
-      shell: bash
