@@ -78,5 +78,5 @@ runs:
       id: upload-changelog-json
       uses: actions/upload-artifact@v2
       with:
-        name: baseline_json
+        name: changelog-json
         path: ./context.json
